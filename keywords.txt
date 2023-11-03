@@ -13,6 +13,7 @@ ShiftyEMA	KEYWORD1
 #######################################
 
 updateEMA	KEYWORD2
+getCurrentEMA KEYWORD2
 reset	KEYWORD2
 
 #######################################
