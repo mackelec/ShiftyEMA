@@ -83,7 +83,8 @@ public:
     else
     {
       int32_t big = (_currentEMA << _scale) - ((_currentEMA << _scale) >> _smoothingExponent) + ((newValue << _scale) >> _smoothingExponent);
-      _currentEMA = big >> _scale; // Scale back down by dividing by 2^_scale
+      //_currentEMA = big >> _scale; // Scale back down by dividing by 2^_scale
+      _currentEMA = (big + (1 << (_scale - 1))) >> _scale; // Scale back down by dividing by 2^_scale with rounding
     }
     return _currentEMA;
   }
