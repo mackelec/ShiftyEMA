@@ -1,49 +1,55 @@
 /* ShiftyEMA.h
  *
- * ShiftyEMA is a lightweight, efficient library for calculating the Exponential Moving Average (EMA)
- * on Arduino-based microcontrollers. The name reflects its use of bitwise shift operations to perform
- * fast, efficient computations without relying on floating-point arithmetic.
+ * ShiftyEMA is a specialized library designed for efficient calculation of the 
+ * Exponential Moving Average (EMA) on Arduino platforms. It takes advantage of 
+ * bitwise shift operations to optimize performance, which is especially useful 
+ * for systems with limited computational capabilities.
  *
- * By using integer math and logical bit shifts, ShiftyEMA can perform EMA calculations with reduced
- * computational overhead, making it particularly suitable for resource-constrained environments and
- * real-time applications where performance is essential.
+ * Key Advantages:
+ * - Utilizes integer arithmetic to avoid the computational expense of floating-point operations.
+ * - Employs logical bit shifts for multiplications and divisions by powers of two,
+ *   significantly accelerating the EMA computation process over traditional methods.
  *
- * The library defines a set of smoothing factors as powers of two, allowing for quick left and right
- * bitwise shifts to multiply and divide by two respectively, which drastically speeds up the calculation
- * process compared to traditional methods.
+ * How to Use:
+ * 1. Include ShiftyEMA.h in your Arduino project.
+ * 2. Create a ShiftyEMA object with a specified smoothing factor.
+ * 3. Use the getCurrentEMA method to add new data points and obtain the EMA value.
+ * 4. Use the reset method to clear the current EMA state, if necessary.
  *
- * Usage:
- * 1. Include the ShiftyEMA.h in your Arduino sketch.
- * 2. Instantiate a ShiftyEMA object with the desired smoothing exponent.
- * 3. Use the updateEMA method to input new data points and receive the smoothed EMA value in return.
- * 4. The reset method can be called at any time to reinitialize the EMA calculation.
- *
- * Example:
- * ```
+ * Example Sketch:
+ * 
  * #include <ShiftyEMA.h>
  *
- * ShiftyEMA emaFilter(ShiftyEMA::SMOOTHING_VALUE_4);
+ * ShiftyEMA ema(ShiftyEMA::SMOOTHING_VALUE_4);
  *
  * void setup() {
  *   Serial.begin(9600);
  * }
  *
  * void loop() {
- *   int newData = random(0, 1000);
- *   int emaValue = emaFilter.updateEMA(newData);
- *   Serial.print("New Data: ");
- *   Serial.print(newData);
- *   Serial.print(" EMA: ");
+ *   int sensorReading = analogRead(A0);
+ *   int emaValue = ema.getCurrentEMA(sensorReading);
+ *   Serial.print("Sensor Reading: ");
+ *   Serial.print(sensorReading);
+ *   Serial.print(" | EMA: ");
  *   Serial.println(emaValue);
  *   delay(1000);
  * }
- * ```
+ * 
  *
- * ShiftyEMA offers a balance between efficiency and functionality, providing a tool that is both
- * simple to use and highly optimized for the Arduino platform.
+ * Methods Description:
+ * - ShiftyEMA(SmoothingExponent smoothing, int16_t scale = 4): Constructor that initializes the filter with a specified smoothing factor.
+ * - void updateEMA(int16_t newValue): Internally updates the EMA with a new data value without returning it.
+ * - int16_t getCurrentEMA(int16_t newValue): Updates the EMA with a new value and returns the updated EMA value.
+ * - int16_t getCurrentEMA() const: Returns the current EMA value without updating it with a new data point.
+ * - int32_t getScaledEMA() const: Returns the scaled internal EMA value for more precise calculations.
+ * - void reset(): Resets the EMA calculation to its initial state as if no data points had been provided.
  *
- * Created by [Your Name or GitHub username]
- * Released into the public domain for open use and modification as desired.
+ * ShiftyEMA offers a perfect balance between simplicity and efficiency, making it an 
+ * ideal tool for EMA computations in embedded systems using the Arduino framework.
+ *
+ * Author: mackelec
+ * License: Released into the public domain for unrestricted use and adaptation.
  */
 #ifndef ShiftyEMA_h
 #define ShiftyEMA_h
@@ -68,38 +74,55 @@ public:
   };
 
   // Constructor that allows setting the scale factor
-  explicit ShiftyEMA(SmoothingExponent smoothing, int scale = 4)
-  : _smoothingExponent(smoothing), _scale(scale), _firstUpdate(true), _currentEMA(0) 
+  explicit ShiftyEMA(SmoothingExponent smoothing, int16_t scale = 4)
+  : smoothingExponent(smoothing), scale(scale), firstUpdate(true), scaledEMA(0), rounding(1 << (scale - 1)) 
   {
   }
 
-  int updateEMA(int newValue)
+  void updateEMA(int16_t newValue)
   {
-    if (_firstUpdate)
+    if (firstUpdate)
     {
-      _currentEMA = newValue; // Initialize _currentEMA with newValue
-      _firstUpdate = false;
+      scaledEMA = newValue << scale; // Store the scaled up value of the first data point
+      firstUpdate = false;
     }
     else
     {
-      int32_t big = (_currentEMA << _scale) - ((_currentEMA << _scale) >> _smoothingExponent) + ((newValue << _scale) >> _smoothingExponent);
-      //_currentEMA = big >> _scale; // Scale back down by dividing by 2^_scale
-      _currentEMA = (big + (1 << (_scale - 1))) >> _scale; // Scale back down by dividing by 2^_scale with rounding
+      // Apply the EMA formula on the scaled value
+      scaledEMA = scaledEMA - (scaledEMA >> smoothingExponent) + ((newValue << scale) >> smoothingExponent);
     }
-    return _currentEMA;
+  }
+
+  // Update EMA with a new value and return the current EMA
+  int16_t getCurrentEMA(int16_t newValue)
+  {
+    updateEMA(newValue); // Update the scaled EMA
+    return getCurrentEMA(); // Return the scaled-down current EMA
+  }
+
+  // Get the current EMA without updating it
+  int16_t getCurrentEMA() const
+  {
+    return (scaledEMA + rounding) >> scale; // Scale the EMA back down and round to nearest integer
+  }
+
+  int32_t getScaledEMA() const
+  {
+    return scaledEMA;
   }
 
   void reset()
   {
-    _firstUpdate = true;
-    _currentEMA = 0;
+    firstUpdate = true;
+    scaledEMA = 0;
   }
 
 private:
-  int _currentEMA;
-  const SmoothingExponent _smoothingExponent;
-  bool _firstUpdate;
-  const int _scale; // Scale factor as a power of 2
+  int32_t scaledEMA; // Scaled EMA value to avoid recalculations
+  const   SmoothingExponent smoothingExponent;
+  bool    firstUpdate;
+  const int16_t scale; // Scale factor as a power of 2
+  const int32_t rounding; // Value for rounding result to nearest integer
 };
 
 #endif /* ShiftyEMA_h */
