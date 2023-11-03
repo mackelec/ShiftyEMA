@@ -67,8 +67,9 @@ public:
     SMOOTHING_VALUE_512 = 9
   };
 
-  explicit ShiftyEMA(SmoothingExponent smoothing)
-  : _smoothingExponent(smoothing), _firstUpdate(true), _currentEMA(0) 
+  // Constructor that allows setting the scale factor
+  explicit ShiftyEMA(SmoothingExponent smoothing, int scale = 4)
+  : _smoothingExponent(smoothing), _scale(scale), _firstUpdate(true), _currentEMA(0) 
   {
   }
 
@@ -76,13 +77,13 @@ public:
   {
     if (_firstUpdate)
     {
-      _currentEMA = newValue;
+      _currentEMA = newValue; // Initialize _currentEMA with newValue
       _firstUpdate = false;
     }
     else
     {
-      int32_t big = (_currentEMA << 4) - ((_currentEMA << 4) >> _smoothingExponent) + ((newValue << 4) >>_smoothingExponent);
-      _currentEMA = big >> 4; // Scale back down by dividing by 16
+      int32_t big = (_currentEMA << _scale) - ((_currentEMA << _scale) >> _smoothingExponent) + ((newValue << _scale) >> _smoothingExponent);
+      _currentEMA = big >> _scale; // Scale back down by dividing by 2^_scale
     }
     return _currentEMA;
   }
@@ -97,6 +98,7 @@ private:
   int _currentEMA;
   const SmoothingExponent _smoothingExponent;
   bool _firstUpdate;
+  const int _scale; // Scale factor as a power of 2
 };
 
 #endif /* ShiftyEMA_h */
