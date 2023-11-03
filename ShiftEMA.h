@@ -81,7 +81,8 @@ public:
     }
     else
     {
-      _currentEMA = ((_currentEMA << 10) - _currentEMA + (newValue << _smoothingExponent)) >> 10;
+      int32_t big = (_currentEMA << 4) - ((_currentEMA << 4) >> _smoothingExponent) + ((newValue << 4) >>_smoothingExponent);
+      _currentEMA = big >> 4; // Scale back down by dividing by 16
     }
     return _currentEMA;
   }
