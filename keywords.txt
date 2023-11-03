@@ -1,0 +1,31 @@
+#######################################
+# Syntax Coloring Map For ShiftyEMA
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+ShiftyEMA	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+updateEMA	KEYWORD2
+reset	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+SMOOTHING_VALUE_1	LITERAL1
+SMOOTHING_VALUE_2	LITERAL1
+SMOOTHING_VALUE_4	LITERAL1
+SMOOTHING_VALUE_8	LITERAL1
+SMOOTHING_VALUE_16	LITERAL1
+SMOOTHING_VALUE_32	LITERAL1
+SMOOTHING_VALUE_64	LITERAL1
+SMOOTHING_VALUE_128	LITERAL1
+SMOOTHING_VALUE_256	LITERAL1
+SMOOTHING_VALUE_512	LITERAL1
