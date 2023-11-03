@@ -9,13 +9,28 @@ A fast, efficient, and lightweight library for calculating Exponential Moving Av
 - **Simple Interface**: Easy to use with minimal setup.
 - **Flexible Smoothing**: Supports multiple smoothing factors for fine control over the averaging process.
 
+## Methods
+
+The ShiftyEMA library provides several methods for EMA calculation and management:
+
+- `ShiftyEMA(SmoothingExponent smoothing)`: Constructor to initialize the EMA filter with a specified smoothing factor.
+- `updateEMA(int16_t newValue)`: Accepts a new data point and updates the EMA value accordingly. This method should be called with each new data point before calling `getCurrentEMA` to get the updated EMA value.
+- `getCurrentEMA(int16_t newValue)`: Combines the action of updating the EMA with the new data point and returning the updated EMA value. This is a convenience method that calls `updateEMA` internally.
+- `getCurrentEMA()`: Returns the current EMA value without updating it with a new data point, allowing you to retrieve the last calculated EMA without altering its state.
+- `getScaledEMA()`: Provides access to the scaled EMA value used internally, which might be useful for advanced calculations or for debugging purposes.
+- `reset()`: Resets the EMA calculation to its initial state, effectively starting the calculation over. This is useful when the data stream has been interrupted or when a new type of data is being processed.
+
+These methods facilitate a flexible and straightforward approach to applying an EMA filter in your Arduino projects.
+
 ## Usage
 
 To use ShiftyEMA in your project, include the `ShiftyEMA.h` header file and follow these steps:
 
 1. Create an instance of the `ShiftyEMA` class.
 2. Call the `updateEMA` method with new data.
-3. Use the `reset` method to reinitialize the EMA calculation if needed.
+3. Call getCurrentEMA() to retrieve the current EMA value.
+4. Call getCurrentEMA(newData) to update the EMA with newData and retrieve EMA value.
+5. Use the `reset` method to reinitialize the EMA calculation if needed.
 
 Here is a simple example to get you started:
 
@@ -31,7 +46,7 @@ void setup() {
 
 void loop() {
   int newData = random(0, 1000);
-  int emaValue = emaFilter.updateEMA(newData);
+  int emaValue = emaFilter.getCurrentEMA(newData);
   
   Serial.print("New Data: ");
   Serial.print(newData);
@@ -42,13 +57,6 @@ void loop() {
 }
 ```
 
-## Contributing
-
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-
-Don't forget to give the project a star! Thanks again!
 
 ## License
 
